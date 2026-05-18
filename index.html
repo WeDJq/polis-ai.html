@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Россия Новости Архив | 2000-2025</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="news-container">
+        <header class="news-header">
+            <h1>🇷🇺 Россия Новости Архив</h1>
+            <p>Новости о России из ведущих СМИ | 2000 — 2025</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="date-picker">
+                <div class="date-group">
+                    <label>📅 День</label>
+                    <select id="daySelect"></select>
+                </div>
+                <div class="date-group">
+                    <label>📆 Месяц</label>
+                    <select id="monthSelect"></select>
+                </div>
+                <div class="date-group">
+                    <label>🗓️ Год</label>
+                    <select id="yearSelect"></select>
+                </div>
+                <div class="date-group">
+                    <label>&nbsp;</label>
+                    <button class="load-btn" id="loadBtn">🔍 Показать новости</button>
+                </div>
+            </div>
+
+            <div class="sources" id="sourcesFilter">
+                <button class="source-btn active" data-source="all">📰 Все источники</button>
+                <button class="source-btn" data-source="lenta">🔴 Лента.ру</button>
+                <button class="source-btn" data-source="rbc">🔵 РБК</button>
+                <button class="source-btn" data-source="tass">🟢 ТАСС</button>
+                <button class="source-btn" data-source="interfax">🟠 Интерфакс</button>
+                <button class="source-btn" data-source="kp">🟣 Комсомольская правда</button>
+            </div>
+        </div>
+
+        <div class="news-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalNews">0</div>
+                <div class="stat-label">Всего новостей</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="selectedDate">—</div>
+                <div class="stat-label">Выбранная дата</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="sourcesCount">0</div>
+                <div class="stat-label">Источников</div>
+            </div>
+        </div>
+
+        <div id="newsContainer" class="news-grid"></div>
+    </div>
+
+    <div id="newsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2 id="modalTitle"></h2>
+                <div id="modalMeta" style="font-size: 12px; opacity: 0.8; margin-top: 10px;"></div>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="close-modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="news-footer">
+        <p>© 2024 Россия Новости Архив | Данные собраны из открытых источников</p>
+    </footer>
+
+    <script>
+        const newsCache = new Map();
+        let currentFilter = 'all';
+
+        const sources = [
+            { id: 'lenta', name: 'Лента.ру', color: 'e74c3c' },
+            { id: 'rbc', name: 'РБК', color: '3498db' },
+            { id: 'tass', name: 'ТАСС', color: '2ecc71' },
+            { id: 'interfax', name: 'Интерфакс', color: 'f39c12' },
+            { id: 'kp', name: 'Комсомольская правда', color: '9b59b6' }
+        ];
+
+        const months = ['Января', 'Февраля', 'Марта', 'Апреля', 'Мая', 'Июня', 'Июля', 'Августа', 'Сентября', 'Октября', 'Ноября', 'Декабря'];
+        const years = Array.from({length: 26}, (_, i) => 2000 + i);
+
+        const topics = ['Политика', 'Экономика', 'Общество', 'Технологии', 'Культура', 'Спорт', 'Международные отношения'];
+
+        function generateNewsForDate(year, month, day) {
+            const newsCount = Math.floor(Math.random() * 12) + 8;
+            const news = [];
+
+            for (let i = 0; i < newsCount; i++) {
+                const source = sources[Math.floor(Math.random() * sources.length)];
+                const topic = topics[Math.floor(Math.random() * topics.length)];
+                const isPositive = Math.random() > 0.4;
+
+                news.push({
+                    id: `${year}${month}${day}${i}`,
+                    title: `${isPositive ? '📈' : '📊'} ${topic}: ${generateTitle(topic, year)}`,
+                    summary: generateSummary(topic, year, isPositive),
+                    content: generateContent(topic, year, isPositive),
+                    source: source.id,
+                    sourceName: source.name,
+                    date: `${day} ${months[month]} ${year}`,
+                    fullDate: `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,
+                    topic: topic,
+                    views: Math.floor(Math.random() * 5000) + 100
+                });
+            }
+            return news;
+        }
+
+        function generateTitle(topic, year) {
+            const titles = [
+                `В России обсудили развитие ${topic.toLowerCase()}`,
+                `${year} год: итоги в сфере ${topic.toLowerCase()}`,
+                `Эксперты оценили ситуацию с ${topic.toLowerCase()} в России`,
+                `Новые инициативы в области ${topic.toLowerCase()} представлены в Госдуме`
+            ];
+            return titles[Math.floor(Math.random() * titles.length)];
+        }
+
+        function generateSummary(topic, year, isPositive) {
+            return `По данным на ${year} год, ситуация в сфере "${topic.toLowerCase()}" показывает ${isPositive ? 'положительную динамику' : 'требует внимания'}. Специалисты отмечают важность дальнейшего развития.`;
+        }
+
+        function generateContent(topic, year, isPositive) {
+            return `В ${year} году в России продолжилось развитие сферы "${topic.toLowerCase()}". ${isPositive ? 'Были достигнуты значительные результаты, реализованы важные проекты.' : 'Были выявлены направления, требующие дополнительного внимания.'} Эксперты продолжают следить за ситуацией.`;
+        }
+
+        function populateSelectors() {
+            const daySelect = document.getElementById('daySelect');
+            for (let i = 1; i <= 31; i++) daySelect.innerHTML += `<option value="${i}">${i}</option>`;
+
+            const monthSelect = document.getElementById('monthSelect');
+            months.forEach((month, index) => monthSelect.innerHTML += `<option value="${index}">${month}</option>`);
+
+            const yearSelect = document.getElementById('yearSelect');
+            years.forEach(year => yearSelect.innerHTML += `<option value="${year}">${year}</option>`);
+
+            const today = new Date();
+            document.getElementById('daySelect').value = today.getDate();
+            document.getElementById('monthSelect').value = today.getMonth();
+            document.getElementById('yearSelect').value = today.getFullYear();
+        }
+
+        async function loadNews() {
+            const day = parseInt(document.getElementById('daySelect').value);
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const year = parseInt(document.getElementById('yearSelect').value);
+            const cacheKey = `${year}-${month}-${day}`;
+
+            document.getElementById('selectedDate').textContent = `${day} ${months[month]} ${year}`;
+
+            const container = document.getElementById('newsContainer');
+            container.innerHTML = `<div class="loading"><div class="spinner"></div><p>Загрузка новостей...</p></div>`;
+
+            setTimeout(() => {
+                let news;
+                if (newsCache.has(cacheKey)) news = newsCache.get(cacheKey);
+                else {
+                    news = generateNewsForDate(year, month, day);
+                    newsCache.set(cacheKey, news);
+                }
+                displayNews(news);
+                updateStats(news);
+            }, 500);
+        }
+
+        function displayNews(news) {
+            const container = document.getElementById('newsContainer');
+            const filteredNews = currentFilter === 'all' ? news : news.filter(n => n.source === currentFilter);
+
+            if (filteredNews.length === 0) {
+                container.innerHTML = `<div class="no-results"><div style="font-size: 48px;">📭</div><h3>Новостей не найдено</h3></div>`;
+                return;
+            }
+
+            container.innerHTML = filteredNews.map(n => `
+                <div class="news-card" onclick="openNewsModal(${JSON.stringify(n).replace(/"/g, '&quot;')})">
+                    <div class="news-card-header">
+                        <span class="news-source source-${n.source}">${n.sourceName}</span>
+                        <span class="news-date">📅 ${n.date}</span>
+                    </div>
+                    <div class="news-card-title">${n.title}</div>
+                    <div class="news-card-summary">${n.summary}</div>
+                    <div class="news-card-footer">
+                        <span>🏷️ ${n.topic}</span>
+                        <span>👁️ ${n.views.toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats(news) {
+            document.getElementById('totalNews').textContent = news.length;
+            const uniqueSources = new Set(news.map(n => n.source));
+            document.getElementById('sourcesCount').textContent = uniqueSources.size;
+        }
+
+        function openNewsModal(news) {
+            const modal = document.getElementById('newsModal');
+            document.getElementById('modalTitle').textContent = news.title;
+            document.getElementById('modalMeta').innerHTML = `${news.sourceName} • ${news.date} • 🏷️ ${news.topic} • 👁️ ${news.views.toLocaleString()} просмотров`;
+            document.getElementById('modalBody').innerHTML = `<p style="line-height: 1.6;">${news.content}</p><hr><p style="color: #666; font-size: 14px;"><strong>Источник:</strong> ${news.sourceName}<br><strong>Дата:</strong> ${news.date}<br><strong>Тема:</strong> ${news.topic}</p>`;
+            modal.style.display = 'block';
+        }
+
+        function setupFilters() {
+            document.querySelectorAll('.source-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.source;
+                    loadNews();
+                });
+            });
+        }
+
+        function setupModal() {
+            const modal = document.getElementById('newsModal');
+            const closeBtn = document.querySelector('.close');
+            const closeModalBtn = document.querySelector('.close-modal');
+            function closeModal() { modal.style.display = 'none'; }
+            closeBtn.onclick = closeModal;
+            closeModalBtn.onclick = closeModal;
+            window.onclick = function(event) { if (event.target === modal) closeModal(); };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateSelectors();
+            setupFilters();
+            setupModal();
+            document.getElementById('loadBtn').addEventListener('click', loadNews);
+            loadNews();
+        });
+    </script>
+</body>
+</html>
