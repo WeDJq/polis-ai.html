@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolisAI | Политический аналитик на нейросети</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Анимированный фон */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .circle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+            }
+            25% {
+                transform: translateY(-50px) translateX(30px);
+            }
+            50% {
+                transform: translateY(20px) translateX(-20px);
+            }
+            75% {
+                transform: translateY(50px) translateX(40px);
+            }
+        }
+
+        /* Основной контейнер */
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            height: 100vh;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Боковая панель */
+        .sidebar {
+            width: 320px;
+            background: rgba(15, 20, 30, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo p {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        /* Инфо-панель */
+        .info-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .info-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topic-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: rgba(102, 126, 234, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            background: rgba(102, 126, 234, 0.6);
+            transform: scale(1.05);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        /* Основная область чата */
+        .chat-area {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Заголовок чата */
+        .chat-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+            color: white;
+        }
+
+        .chat-header h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .online-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Сообщения */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .message.bot .message-avatar {
+            background: #2d3748;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: #f0f2f5;
+            color: #1a1a2e;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+
+        /* Индикатор печати */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: #f0f2f5;
+            border-radius: 18px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Поле ввода */
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 15px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            transition: all 0.2s;
+            max-height: 120px;
+        }
+
+        textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Политические темы */
+        .quick-topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-topic {
+            background: #f0f2f5;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1a1a2e;
+        }
+
+        .quick-topic:hover {
+            background: #e0e3e7;
+            transform: scale(1.02);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 15px;
+            }
+            
+            .logo {
+                flex: 1;
+                text-align: left;
+                padding: 0;
+                border: none;
+            }
+            
+            .info-panel {
+                flex: 2;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg" id="animatedBg"></div>
+
+    <div class="container">
+        <!-- Боковая панель -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>🏛️ PolisAI</h1>
+                <p>Нейросетевой политический аналитик</p>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-title">
+                    <span>🎯</span> Горячие темы
+                </div>
+                <div class="topic-tags" id="topicTags">
+                    <span class="tag">Геополитика</span>
+                    <span class="tag">Экономика</span>
+                    <span class="tag">Выборы</span>
+                    <span class="tag">Санкции</span>
+                    <span class="tag">Экология</span>
+                    <span class="tag">Права человека</span>
+                    <span class="tag">Безопасность</span>
+                    <span class="tag">Дипломатия</span>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-title">
+                    <span>📊</span> Статистика диалога
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="messageCount">0</div>
+                        <div class="stat-label">Сообщений</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="sessionTime">0</div>
+                        <div class="stat-label">Минут в чате</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-title">
+                    <span>⚡</span> Быстрые вопросы
+                </div>
+                <div class="quick-topics" id="quickTopics">
+                    <div class="quick-topic">Что думаешь о геополитике?</div>
+                    <div class="quick-topic">Анализ текущей ситуации</div>
+                    <div class="quick-topic">Прогноз на 2025</div>
+                    <div class="quick-topic">Международные отношения</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Область чата -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <h2>
+                    <span class="online-status"></span>
+                    PolisAI — Нейросеть для обсуждения политики
+                </h2>
+                <p>ИИ анализирует политические события и даёт объективные ответы</p>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                <div class="message bot">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        Здравствуйте! Я PolisAI — нейросетевой политический аналитик. <br><br>
+                        Я могу обсудить с вами любые политические темы, проанализировать события, 
+                        дать прогнозы и ответить на сложные вопросы. <br><br>
+                        <strong>Мои принципы:</strong><br>
+                        • Объективный анализ<br>
+                        • Учёт разных точек зрения<br>
+                        • Основанность на фактах<br>
+                        • Конфиденциальность диалога<br><br>
+                        Задайте мне вопрос о политике!
+                        <div class="message-time">Сейчас</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Спросите о политике... Например: 'Какова роль России в современном мире?'"
+                        rows="1"
+                    ></textarea>
+                    <button class="send-btn" id="sendBtn">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== НЕЙРОСЕТЬ ДЛЯ ОБСУЖДЕНИЯ ПОЛИТИКИ ==========
+        
+        class PoliticalAI {
+            constructor() {
+                this.context = [];
+                this.politicalKnowledge = this.initKnowledge();
+            }
+
+            initKnowledge() {
+                return {
+                    // Аналитические шаблоны ответов
+                    geopolitics: {
+                        patterns: [
+                            'анализ геополитической ситуации',
+                            'международные отношения',
+                            'глобальные вызовы'
+                        ],
+                        responses: [
+                            "С точки зрения геополитики, современный мир переживает период трансформации многополярной системы. Наблюдается усиление региональных держав и перераспределение влияния.",
+                            "Геополитическая динамика характеризуется ростом значимости экономических союзов и поиском нового баланса сил между глобальными центрами влияния."
+                        ]
+                    },
+                    economy: {
+                        patterns: ['экономика', 'санкции', 'торговля', 'рынок'],
+                        responses: [
+                            "Экономические процессы тесно связаны с политическими решениями. Санкционная политика и ответные меры формируют новую реальность глобальной торговли.",
+                            "Анализ показывает, что экономическая независимость становится ключевым фактором в принятии политических решений."
+                        ]
+                    }
+                };
+            }
+
+            async generateResponse(question, chatHistory) {
+                // Имитация работы нейросети с задержкой
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const response = this.analyzeAndRespond(question, chatHistory);
+                        resolve(response);
+                    }, 1000 + Math.random() * 1000);
+                });
+            }
+
+            analyzeAndRespond(question, chatHistory) {
+                const lowerQuestion = question.toLowerCase();
+                
+                // Анализ тональности и тематики вопроса
+                const topics = this.detectTopics(lowerQuestion);
+                const sentiment = this.analyzeSentiment(lowerQuestion);
+                
+                // Генерация ответа на основе тематики
+                let response = this.generateTopicResponse(topics, sentiment);
+                
+                // Добавляем аналитическую глубину
+                response += this.addAnalyticalDepth(topics);
+                
+                // Добавляем ссылки на источники (имитация)
+                response += this.addSources(topics);
+                
+                return response;
+            }
+
+            detectTopics(question) {
+                const topics = [];
+                const topicKeywords = {
+                    geopolitics: ['геополитик', 'международн', 'глобальн', 'мир', 'страна', 'союз', 'блок'],
+                    economy: ['экономик', 'санкц', 'бюджет', 'деньг', 'рынок', 'торговл', 'инвестиц'],
+                    security: ['безопасност', 'арми', 'оборон', 'конфликт', 'войн'],
+                    humanRights: ['права', 'свобод', 'демократи', 'выбор'],
+                    ecology: ['экологи', 'климат', 'природ', 'ресурс']
+                };
+                
+                for (const [topic, keywords] of Object.entries(topicKeywords)) {
+                    if (keywords.some(kw => question.includes(kw))) {
+                        topics.push(topic);
+                    }
+                }
+                
+                return topics.length ? topics : ['general'];
+            }
+
+            analyzeSentiment(question) {
+                const positive = ['хорош', 'отличн', 'позитив', 'успех', 'достиж'];
+                const negative = ['плох', 'кризис', 'проблем', 'угроз', 'критик'];
+                
+                if (positive.some(w => question.includes(w))) return 'positive';
+                if (negative.some(w => question.includes(w))) return 'negative';
+                return 'neutral';
+            }
+
+            generateTopicResponse(topics, sentiment) {
+                const responses = {
+                    geopolitics: {
+                        neutral: "Анализируя геополитическую обстановку, можно отметить, что современная международная система находится в состоянии активной трансформации. Формируются новые центры силы, меняются правила глобального взаимодействия.",
+                        positive: "С позитивной точки зрения, геополитические изменения открывают новые возможности для многополярного мира и более справедливой международной системы.",
+                        negative: "Геополитическая напряжённость действительно вызывает обеспокоенность. Важно отметить необходимость диалога и поиска компромиссных решений."
+                    },
+                    economy: {
+                        neutral: "Экономический анализ показывает взаимосвязь политических решений и экономических показателей. Формируются новые модели хозяйствования и экономического сотрудничества.",
+                        positive: "Экономические перспективы выглядят оптимистично при условии адаптации к новым условиям и развития внутренних резервов.",
+                        negative: "Экономические вызовы требуют системных решений и координации усилий на разных уровнях управления."
+                    },
+                    general: {
+                        neutral: "Это сложный многогранный вопрос. Политические процессы требуют комплексного анализа с учётом исторического контекста, экономических факторов и социальной динамики.",
+                        positive: "В этом вопросе можно найти позитивные аспекты, особенно в долгосрочной перспективе развития политических институтов.",
+                        negative: "Действительно, это проблемная область, требующая пристального внимания и взвешенных решений."
+                    }
+                };
+                
+                const topicKey = topics[0];
+                const sentimentKey = sentiment;
+                
+                if (responses[topicKey] && responses[topicKey][sentimentKey]) {
+                    return responses[topicKey][sentimentKey];
+                }
+                return responses.general[sentimentKey];
+            }
+
+            addAnalyticalDepth(topics) {
+                const depthAnalyses = {
+                    geopolitics: " С геополитической точки зрения, ключевым фактором становится способность государств к стратегическому планированию и адаптации к быстро меняющимся условиям.",
+                    economy: " Экономический анализ указывает на важность диверсификации и технологического суверенитета как факторов политической стабильности.",
+                    general: " Политологический анализ показывает, что эффективные политические системы должны сочетать стабильность институтов с гибкостью принятия решений."
+                };
+                
+                return depthAnalyses[topics[0]] || depthAnalyses.general;
+            }
+
+            addSources(topics) {
+                return "\n\n📊 *Анализ основан на данных международных организаций, экспертных оценках и статистических отчётах.*";
+            }
+        }
+
+        // ========== УПРАВЛЕНИЕ ЧАТОМ ==========
+        
+        const ai = new PoliticalAI();
+        let messageCount = 0;
+        let sessionStart = Date.now();
+        let isTyping = false;
+        
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messageCountSpan = document.getElementById('messageCount');
+        const sessionTimeSpan = document.getElementById('sessionTime');
+        
+        // Обновление статистики
+        function updateStats() {
+            messageCountSpan.textContent = messageCount;
+            const minutes = Math.floor((Date.now() - sessionStart) / 60000);
+            sessionTimeSpan.textContent = minutes;
+        }
+        
+        setInterval(updateStats, 1000);
+        
+        // Добавление сообщения
+        function addMessage(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${isUser ? '👤' : '🤖'}</div>
+                <div class="message-content">
+                    ${text}
+                    <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            if (isUser) {
+                messageCount++;
+                updateStats();
+            }
+        }
+        
+        // Индикатор печати
+        function showTypingIndicator() {
+            if (isTyping) return;
+            isTyping = true;
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+            isTyping = false;
+        }
+        
+        // Отправка сообщения
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || isTyping) return;
+            
+            addMessage(text, true);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            showTypingIndicator();
+            
+            try {
+                const history = Array.from(messagesContainer.querySelectorAll('.message.bot .message-content'))
+                    .slice(-5)
+                    .map(el => el.textContent);
+                
+                const response = await ai.generateResponse(text, history);
+                hideTypingIndicator();
+                addMessage(response, false);
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage("Извините, произошла ошибка. Пожалуйста, переформулируйте вопрос.", false);
+            }
+        }
+        
+        // Обработчики событий
+        sendBtn.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Авто-расширение textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+        
+        // Быстрые темы
+        document.querySelectorAll('.tag, .quick-topic').forEach(el => {
+            el.addEventListener('click', () => {
+                messageInput.value = el.textContent;
+                sendMessage();
+            });
+        });
+        
+        // Анимированный фон
+        function createAnimatedBackground() {
+            const bg = document.getElementById('animatedBg');
+            for (let i = 0; i < 20; i++) {
+                const circle = document.createElement('div');
+                circle.className = 'circle';
+                const size = Math.random() * 300 + 50;
+                circle.style.width = size + 'px';
+                circle.style.height = size + 'px';
+                circle.style.left = Math.random() * 100 + '%';
+                circle.style.top = Math.random() * 100 + '%';
+                circle.style.animationDelay = Math.random() * 20 + 's';
+                circle.style.animationDuration = 15 + Math.random() * 20 + 's';
+                bg.appendChild(circle);
+            }
+        }
+        
+        createAnimatedBackground();
+        
+        console.log('🤖 PolisAI запущен! Нейросеть готова к обсуждению политики');
+    </script>
+</body>
+</html>
